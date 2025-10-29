@@ -100,7 +100,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert new camera
+    // Check if camera already exists
+    const { data: existing, error: checkError } = await supabase
+      .from("cameras")
+      .select("*")
+      .eq("camera_id", camera_id)
+      .single();
+
+    // If camera exists, update and return it
+    if (existing && !checkError) {
+      const { data: updated, error: updateError } = await supabase
+        .from("cameras")
+        .update({
+          camera_name,
+          device_type,
+          firmware_version,
+          assigned_to,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("camera_id", camera_id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Error updating camera:", updateError);
+        return NextResponse.json(
+          { error: "Failed to update camera", details: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(
+        { camera: updated, message: "Camera already exists - updated" },
+        { status: 200 }
+      );
+    }
+
+    // Camera doesn't exist, create new one
     const { data: camera, error } = await supabase
       .from("cameras")
       .insert({
