@@ -14,7 +14,7 @@ export default function CamerasPage() {
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { showToast } = useToast();
+  const { error, success } = useToast();
 
   const selectedCamera = cameras.find((c) => c.id === selectedCameraId) || null;
 
@@ -36,12 +36,9 @@ export default function CamerasPage() {
       if (data.cameras?.length > 0 && !selectedCameraId) {
         setSelectedCameraId(data.cameras[0].id);
       }
-    } catch (error) {
-      console.error("Error fetching cameras:", error);
-      showToast({
-        type: "error",
-        message: "Failed to load cameras",
-      });
+    } catch (err) {
+      console.error("Error fetching cameras:", err);
+      error("Failed to load cameras");
     } finally {
       setLoading(false);
     }
@@ -51,10 +48,7 @@ export default function CamerasPage() {
     setRefreshing(true);
     await fetchCameras();
     setRefreshing(false);
-    showToast({
-      type: "success",
-      message: "Cameras refreshed",
-    });
+    success("Cameras refreshed");
   };
 
   const setupRealtimeSubscription = () => {
@@ -128,10 +122,7 @@ export default function CamerasPage() {
         })
         .on("broadcast", { event: "photo" }, (payload) => {
           console.log("New photo received:", payload);
-          showToast({
-            type: "success",
-            message: "New photo received from camera",
-          });
+          success("New photo received from camera");
         })
         .subscribe();
     });

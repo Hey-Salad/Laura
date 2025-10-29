@@ -23,7 +23,7 @@ interface CameraControlProps {
 
 export default function CameraControl({ camera }: CameraControlProps) {
   const [loading, setLoading] = useState<CommandType | null>(null);
-  const { showToast } = useToast();
+  const { success, error } = useToast();
 
   const sendCommand = async (commandType: CommandType, payload: Record<string, any> = {}) => {
     setLoading(commandType);
@@ -43,16 +43,10 @@ export default function CameraControl({ camera }: CameraControlProps) {
         throw new Error(data.error || "Failed to send command");
       }
 
-      showToast({
-        type: "success",
-        message: `Command "${commandType}" sent successfully`,
-      });
-    } catch (error) {
-      console.error("Error sending command:", error);
-      showToast({
-        type: "error",
-        message: error instanceof Error ? error.message : "Failed to send command",
-      });
+      success(`Command "${commandType}" sent successfully`);
+    } catch (err) {
+      console.error("Error sending command:", err);
+      error(err instanceof Error ? err.message : "Failed to send command");
     } finally {
       setLoading(null);
     }
