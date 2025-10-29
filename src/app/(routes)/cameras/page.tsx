@@ -6,6 +6,7 @@ import { Camera, CameraStatusUpdate } from "@/types/camera";
 import CameraList from "@/components/cameras/CameraList";
 import CameraControl from "@/components/cameras/CameraControl";
 import PhotoGallery from "@/components/cameras/PhotoGallery";
+import CameraMapView from "@/components/cameras/CameraMapView";
 import { useToast } from "@/lib/hooks/useToast";
 import { Camera as CameraIcon, RefreshCw } from "lucide-react";
 
@@ -169,6 +170,20 @@ export default function CamerasPage() {
           Refresh
         </button>
       </header>
+
+      {/* Camera Map */}
+      {cameras.some(c => c.location_lat && c.location_lon) && (
+        <div>
+          <h2 className="mb-4 text-lg font-semibold text-white">
+            Camera Locations
+          </h2>
+          <CameraMapView
+            cameras={cameras}
+            selectedCameraId={selectedCameraId || undefined}
+            onSelect={(camera) => setSelectedCameraId(camera.id)}
+          />
+        </div>
+      )}
 
       {/* Camera List */}
       <div>
