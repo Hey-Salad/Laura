@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseServer";
+import { createClient } from "@supabase/supabase-js";
+
+export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,
@@ -7,6 +9,23 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return NextResponse.json(
+        { error: "Supabase server credentials are not configured." },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
 
     // Get camera info
     const { data: camera, error: cameraError } = await supabase
