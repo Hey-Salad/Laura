@@ -5,6 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Camera, CameraStatusUpdate } from "@/types/camera";
 import CameraList from "@/components/cameras/CameraList";
 import CameraControl from "@/components/cameras/CameraControl";
+import CameraInfoPanel from "@/components/cameras/CameraInfoPanel";
+import CameraStreamPreview from "@/components/cameras/CameraStreamPreview";
 import PhotoGallery from "@/components/cameras/PhotoGallery";
 import CameraMapView from "@/components/cameras/CameraMapView";
 import { useToast } from "@/lib/hooks/useToast";
@@ -197,11 +199,20 @@ export default function CamerasPage() {
         />
       </div>
 
-      {/* Selected Camera Controls */}
+      {/* Selected Camera Details */}
       {selectedCamera ? (
-        <div className="space-y-6">
-          <CameraControl camera={selectedCamera} />
-          <PhotoGallery cameraId={selectedCamera.id} />
+        <div className="grid gap-5 lg:grid-cols-2">
+          {/* Left Column */}
+          <div className="space-y-5">
+            <CameraInfoPanel camera={selectedCamera} />
+            <CameraControl camera={selectedCamera} />
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-5">
+            <CameraStreamPreview camera={selectedCamera} />
+            <PhotoGallery cameraId={selectedCamera.id} />
+          </div>
         </div>
       ) : (
         <div className="rounded-xl border border-zinc-800/50 bg-zinc-950/80 p-8 text-center backdrop-blur">
