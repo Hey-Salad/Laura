@@ -120,7 +120,7 @@ export default function CameraMapView({ cameras, onSelect, selectedCameraId }: C
     });
   }, [selectedCameraId]);
 
-  return <div ref={containerRef} className="h-[60vh] w-full rounded-xl shadow-xl" />;
+  return <div ref={containerRef} className="h-[45vh] w-full rounded-xl shadow-xl" />;
 }
 
 function getStatusColor(status: Camera["status"]): string {

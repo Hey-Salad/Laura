@@ -1,0 +1,182 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   HEYSALAD LAURA - ESP32 CONFIGURATION                       ║
+║                          READY TO COPY & PASTE                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔧 WIFI CREDENTIALS (Update These)                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+WIFI_SSID = "YOUR_WIFI_NAME"
+WIFI_PASSWORD = "YOUR_WIFI_PASSWORD"
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📡 SUPABASE CONFIGURATION (Pre-configured)                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+SUPABASE_URL:
+https://ybecdgbzgldafwvzwkpd.supabase.co
+
+SUPABASE_ANON_KEY:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliZWNkZ2J6Z2xkYWZ3dnp3a3BkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjcxMDYwMTksImV4cCI6MjA0MjY4MjAxOX0.H4NkweM9hwVUYxpcaeLCQjs1KBXZfGH0dqCKlyx2S-U
+
+WEBSOCKET_URL:
+wss://ybecdgbzgldafwvzwkpd.supabase.co/realtime/v1/websocket
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📷 CAMERA CONFIGURATION                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+EXISTING CAMERA (For first test - recommended):
+  CAMERA_ID = "CAM001"
+  CAMERA_UUID = "63b6ea55-cdd5-4244-84c4-ed07281ab2e4"
+  CAMERA_NAME = "HeySalad Camera 1"
+
+NEW CAMERA (For additional devices):
+  CAMERA_ID = "CAM002"  (or CAM003, CAM004, etc.)
+  CAMERA_UUID = ""      (leave empty - will auto-register)
+  CAMERA_NAME = "Your Camera Name"
+
+CHANNEL_NAME = "camera-CAM001"  (or camera-CAM002, etc.)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🌐 API ENDPOINTS (Pre-configured)                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+LAURA_BASE_URL:
+https://laura.heysalad.app
+
+REGISTER CAMERA:
+POST https://laura.heysalad.app/api/cameras
+
+UPLOAD PHOTO:
+POST https://laura.heysalad.app/api/cameras/{uuid}/photos
+
+STORAGE UPLOAD:
+POST https://ybecdgbzgldafwvzwkpd.supabase.co/storage/v1/object/camera-photos/{path}
+
+STORAGE PUBLIC URL:
+https://ybecdgbzgldafwvzwkpd.supabase.co/storage/v1/object/public/camera-photos/{path}
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📦 STORAGE CONFIGURATION                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+BUCKET_NAME = "camera-photos"
+
+PHOTO_PATH_FORMAT = "CAM001/timestamp.jpg"
+
+EXAMPLE:
+  Upload:  camera-photos/CAM001/1730456789123.jpg
+  Public:  https://ybecdgbzgldafwvzwkpd.supabase.co/storage/v1/object/public/camera-photos/CAM001/1730456789123.jpg
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔌 WEBSOCKET MESSAGES                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+JOIN CHANNEL:
+{
+  "topic": "camera-CAM001",
+  "event": "phx_join",
+  "payload": {},
+  "ref": "1"
+}
+
+SEND STATUS (ESP32 → Laura):
+{
+  "topic": "camera-CAM001",
+  "event": "broadcast",
+  "payload": {
+    "type": "broadcast",
+    "event": "status",
+    "payload": {
+      "type": "status",
+      "camera_id": "CAM001",
+      "timestamp": "2025-10-29T12:00:00Z",
+      "data": {
+        "battery_level": 85,
+        "wifi_signal": -65,
+        "status": "online"
+      }
+    }
+  }
+}
+
+RECEIVE COMMAND (Laura → ESP32):
+{
+  "topic": "camera-CAM001",
+  "event": "broadcast",
+  "payload": {
+    "type": "broadcast",
+    "event": "command",
+    "payload": {
+      "command": "take_photo",
+      "command_id": "cmd-1730203200000",
+      "payload": { "quality": 85 }
+    }
+  }
+}
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 QUICK START                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+1. Update WiFi credentials in your code
+2. Use CAM001 (UUID: 63b6ea55-cdd5-4244-84c4-ed07281ab2e4) for first test
+3. Flash to ESP32-S3
+4. Open Serial Monitor (115200 baud)
+5. Watch it connect to https://laura.heysalad.app
+6. View at https://laura.heysalad.app/cameras
+7. Click "Take Photo" to test!
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔍 TESTING ENDPOINTS                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Test camera API (from terminal):
+curl https://laura.heysalad.app/api/cameras \
+  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliZWNkZ2J6Z2xkYWZ3dnp3a3BkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjcxMDYwMTksImV4cCI6MjA0MjY4MjAxOX0.H4NkweM9hwVUYxpcaeLCQjs1KBXZfGH0dqCKlyx2S-U"
+
+Expected response:
+{
+  "cameras": [{
+    "id": "63b6ea55-cdd5-4244-84c4-ed07281ab2e4",
+    "camera_id": "CAM001",
+    "status": "offline",
+    ...
+  }]
+}
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📱 VIEW IN BROWSER                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Camera Dashboard:
+https://laura.heysalad.app/cameras
+
+Login (magic link):
+https://laura.heysalad.app/login
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📚 DOCUMENTATION FILES                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+ESP32_READY_TO_FLASH.h         - Complete config file
+ESP32_CAMERA_MAIN.ino           - Full Arduino sketch
+ESP32_API_REFERENCE.md          - All endpoints with examples
+ESP32_QUICK_START.md            - Quick reference guide
+CAMERA_INTEGRATION_EXPLAINED.md - Architecture & flow diagrams
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ ✅ EVERYTHING IS PRE-CONFIGURED - JUST ADD YOUR WIFI!                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝

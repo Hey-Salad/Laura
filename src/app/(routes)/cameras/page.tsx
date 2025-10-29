@@ -149,14 +149,14 @@ export default function CamerasPage() {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5">
       {/* Header */}
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <CameraIcon className="h-8 w-8 text-brand-cherry" />
+          <CameraIcon className="h-7 w-7 text-brand-cherry" />
           <div>
-            <h1 className="text-3xl font-bold text-white">Camera Control</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-2xl font-bold text-white">Camera Control</h1>
+            <p className="text-xs text-zinc-400">
               Manage and control your ESP32-S3 AI cameras remotely
             </p>
           </div>
@@ -174,7 +174,7 @@ export default function CamerasPage() {
       {/* Camera Map */}
       {cameras.some(c => c.location_lat && c.location_lon) && (
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-white">
+          <h2 className="mb-3 text-base font-semibold text-white">
             Camera Locations
           </h2>
           <CameraMapView
@@ -187,7 +187,7 @@ export default function CamerasPage() {
 
       {/* Camera List */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-white">
+        <h2 className="mb-3 text-base font-semibold text-white">
           Cameras ({cameras.length})
         </h2>
         <CameraList
