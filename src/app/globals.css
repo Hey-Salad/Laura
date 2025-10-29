@@ -1,26 +1,95 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: dark;
+  --font-figtree: var(--font-figtree);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-black text-white antialiased;
+  font-family: var(--font-figtree), system-ui, sans-serif;
+  font-feature-settings: "cv01", "cv02";
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(237, 76, 76, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(237, 76, 76, 0.6);
+}
+
+/* Mapbox Popup Styling - HeySalad Brand */
+.heysalad-popup .mapboxgl-popup-content {
+  background-color: #ffd0cd;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(237, 76, 76, 0.3);
+  font-family: var(--font-figtree), system-ui, sans-serif;
+}
+
+.heysalad-popup .popup-content {
+  color: #000000;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.heysalad-popup .popup-content strong {
+  color: #000000;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.heysalad-popup .popup-content .status-active {
+  color: #000000;
+  font-size: 12px;
+}
+
+.heysalad-popup .popup-content .status-delayed {
+  color: #000000;
+  font-size: 12px;
+}
+
+.heysalad-popup .popup-content .status-delivered {
+  color: #000000;
+  font-size: 12px;
+}
+
+.heysalad-popup .mapboxgl-popup-tip {
+  border-top-color: #ffd0cd;
+}
+
+.heysalad-popup .mapboxgl-popup-close-button {
+  color: #000000;
+  font-size: 20px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+
+.heysalad-popup .mapboxgl-popup-close-button:hover {
+  background-color: rgba(237, 76, 76, 0.1);
+  color: #ed4c4c;
+}
+
+/* Toast Animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
 }

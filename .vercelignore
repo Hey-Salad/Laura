@@ -1,0 +1,14 @@
+node_modules
+.next
+.env.local
+.env*.local
+.git
+.gitignore
+*.log
+npm-debug.log*
+.DS_Store
+.vercel
+*.md
+!README.md
+supabase
+docs
