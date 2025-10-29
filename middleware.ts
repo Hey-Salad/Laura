@@ -9,6 +9,7 @@ const PUBLIC_ROUTES = ["/login", "/auth/verify", "/auth/callback"];
 const PUBLIC_API_ROUTES = [
   "/api/auth/send-magic-link",
   "/api/twilio/prompt",
+  "/api/cameras", // ESP32 camera endpoints
 ];
 
 export async function middleware(request: NextRequest) {
