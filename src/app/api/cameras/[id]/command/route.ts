@@ -47,6 +47,11 @@ export async function POST(
       "get_status",
       "update_settings",
       "reboot",
+      "led_on",
+      "led_off",
+      "toggle_led",
+      "play_sound",
+      "save_photo",
     ];
 
     if (!validCommands.includes(command_type)) {
