@@ -8,13 +8,15 @@ import {
   Video,
   StopCircle,
   Activity,
-  Settings,
   RotateCw,
   Loader2,
   Battery,
   Signal,
   MapPin,
   Clock,
+  Lightbulb,
+  Volume2,
+  Save,
 } from "lucide-react";
 
 interface CameraControlProps {
@@ -52,6 +54,28 @@ export default function CameraControl({ camera }: CameraControlProps) {
     }
   };
 
+  const savePhoto = async () => {
+    setLoading("save_photo");
+    try {
+      const response = await fetch(`/api/cameras/${camera.id}/save-photo`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save photo");
+      }
+
+      success("Photo saved to database successfully!");
+    } catch (err) {
+      console.error("Error saving photo:", err);
+      error(err instanceof Error ? err.message : "Failed to save photo");
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const commandButtons = [
     {
       type: "take_photo" as CommandType,
@@ -59,6 +83,28 @@ export default function CameraControl({ camera }: CameraControlProps) {
       icon: CameraIcon,
       color: "brand-cherry",
       payload: { quality: 85, resolution: "1280x720" },
+    },
+    {
+      type: "save_photo" as CommandType,
+      label: "Save Frame",
+      icon: Save,
+      color: "green-500",
+      payload: {},
+      customHandler: savePhoto,
+    },
+    {
+      type: "toggle_led" as CommandType,
+      label: "Night Vision",
+      icon: Lightbulb,
+      color: "yellow-500",
+      payload: {},
+    },
+    {
+      type: "play_sound" as CommandType,
+      label: "Play Sound",
+      icon: Volume2,
+      color: "blue-500",
+      payload: { tone: "beep", duration: 500 },
     },
     {
       type: "start_video" as CommandType,
@@ -80,14 +126,6 @@ export default function CameraControl({ camera }: CameraControlProps) {
       icon: Activity,
       color: "brand-peach",
       payload: {},
-    },
-    {
-      type: "update_settings" as CommandType,
-      label: "Settings",
-      icon: Settings,
-      color: "zinc-400",
-      payload: {},
-      disabled: true, // TODO: Implement settings modal
     },
     {
       type: "reboot" as CommandType,
@@ -212,12 +250,20 @@ export default function CameraControl({ camera }: CameraControlProps) {
           {commandButtons.map((btn) => {
             const Icon = btn.icon;
             const isLoading = loading === btn.type;
-            const isDisabled = btn.disabled || camera.status !== "online" || isLoading;
+            const isDisabled = camera.status !== "online" || isLoading;
 
             return (
               <button
                 key={btn.type}
-                onClick={() => !isDisabled && sendCommand(btn.type, btn.payload)}
+                onClick={() => {
+                  if (!isDisabled) {
+                    if ('customHandler' in btn && btn.customHandler) {
+                      btn.customHandler();
+                    } else {
+                      sendCommand(btn.type, btn.payload);
+                    }
+                  }
+                }}
                 disabled={isDisabled}
                 className={`group relative flex items-center gap-3 rounded-lg border p-4 transition-all ${
                   isDisabled

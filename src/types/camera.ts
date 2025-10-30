@@ -6,7 +6,12 @@ export type CommandType =
   | "stop_video"
   | "get_status"
   | "update_settings"
-  | "reboot";
+  | "reboot"
+  | "led_on"
+  | "led_off"
+  | "toggle_led"
+  | "play_sound"
+  | "save_photo";
 
 export type CommandStatus = "pending" | "sent" | "completed" | "failed" | "timeout";
 
