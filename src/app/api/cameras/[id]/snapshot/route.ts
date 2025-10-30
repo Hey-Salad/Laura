@@ -1,82 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { frameStorage } from "@/lib/frameStorage";
 
 export const runtime = "nodejs";
 
+/**
+ * GET /api/cameras/[id]/snapshot
+ *
+ * Get the latest snapshot (single frame) from camera
+ * Returns JPEG image directly
+ */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Get latest frame from storage
+    const frame = frameStorage.getFrame(id);
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!frame) {
       return NextResponse.json(
-        { error: "Supabase server credentials are not configured." },
-        { status: 500 }
+        { error: "No recent frame available for this camera" },
+        { status: 404 }
       );
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
+    // Return JPEG image (convert Buffer to Uint8Array for NextResponse)
+    return new NextResponse(new Uint8Array(frame.buffer), {
+      status: 200,
+      headers: {
+        "Content-Type": frame.contentType,
+        "Content-Length": frame.size.toString(),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Access-Control-Allow-Origin": "*",
+        "X-Frame-Timestamp": frame.timestamp.toISOString(),
+        "X-Frame-Age": `${Date.now() - frame.timestamp.getTime()}ms`,
       },
     });
-
-    // Get camera info
-    const { data: camera, error: cameraError } = await supabase
-      .from("cameras")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (cameraError || !camera) {
-      return NextResponse.json(
-        { error: "Camera not found" },
-        { status: 404 }
-      );
-    }
-
-    // Check if camera has a direct snapshot URL in metadata
-    if (camera.metadata?.snapshot_url) {
-      // Redirect to camera's snapshot URL
-      return NextResponse.redirect(camera.metadata.snapshot_url);
-    }
-
-    // Otherwise, try to get the latest photo from storage
-    const { data: photos, error: photosError } = await supabase
-      .from("camera_photos")
-      .select("photo_url, thumbnail_url")
-      .eq("camera_id", id)
-      .order("taken_at", { ascending: false })
-      .limit(1);
-
-    if (photosError) {
-      return NextResponse.json(
-        { error: "Failed to fetch photos", details: photosError.message },
-        { status: 500 }
-      );
-    }
-
-    if (!photos || photos.length === 0) {
-      return NextResponse.json(
-        { error: "No photos available for this camera" },
-        { status: 404 }
-      );
-    }
-
-    // Redirect to the latest photo
-    const photoUrl = photos[0].photo_url;
-    return NextResponse.redirect(photoUrl);
-
   } catch (err) {
     console.error("Snapshot error:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: err instanceof Error ? err.message : "Unknown error" },
       { status: 500 }
     );
   }

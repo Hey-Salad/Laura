@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Camera } from "@/types/camera";
-import { Video, RefreshCw, Image as ImageIcon, AlertCircle, Maximize2 } from "lucide-react";
-import { useToast } from "@/lib/hooks/useToast";
+import { Video, RefreshCw, AlertCircle, Maximize2 } from "lucide-react";
 
 interface CameraStreamPreviewProps {
   camera: Camera;
@@ -18,31 +17,14 @@ export default function CameraStreamPreview({ camera }: CameraStreamPreviewProps
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const imgRef = useRef<HTMLImageElement>(null);
-  const { error: showError } = useToast();
 
-  // Get stream URL from camera metadata or construct default
-  const getStreamUrl = (): string | null => {
-    // Check if stream URL is in metadata
-    if (camera.metadata?.stream_url) {
-      return camera.metadata.stream_url;
-    }
-
-    // If camera has IP address in metadata, construct stream URL
-    if (camera.metadata?.ip_address) {
-      return `http://${camera.metadata.ip_address}:81/stream`;
-    }
-
-    return null;
+  // Get stream URL - always use Laura API endpoint
+  const getStreamUrl = (): string => {
+    return `/api/cameras/${camera.id}/stream`;
   };
 
-  // Get snapshot URL
+  // Get snapshot URL - always use Laura API endpoint
   const getSnapshotUrl = (): string => {
-    if (camera.metadata?.snapshot_url) {
-      return `${camera.metadata.snapshot_url}?t=${Date.now()}`;
-    }
-    if (camera.metadata?.ip_address) {
-      return `http://${camera.metadata.ip_address}/capture?t=${Date.now()}`;
-    }
     return `/api/cameras/${camera.id}/snapshot?t=${Date.now()}`;
   };
 
@@ -114,7 +96,6 @@ export default function CameraStreamPreview({ camera }: CameraStreamPreviewProps
                   ? "bg-brand-cherry text-white"
                   : "text-zinc-400 hover:text-white"
               }`}
-              disabled={!streamUrl}
             >
               Live
             </button>
@@ -220,32 +201,10 @@ export default function CameraStreamPreview({ camera }: CameraStreamPreviewProps
             )}
           </div>
           <div className="text-zinc-500">
-            {streamMode === "live" && streamUrl ? "MJPEG" : "Snapshot"}
+            {streamMode === "live" ? "MJPEG" : "Snapshot"}
           </div>
         </div>
       </div>
-
-      {/* Setup Instructions */}
-      {!streamUrl && streamMode === "live" && (
-        <div className="border-t border-zinc-800/50 bg-amber-500/5 p-4">
-          <div className="flex gap-3">
-            <AlertCircle className="h-5 w-5 shrink-0 text-amber-500" />
-            <div className="text-xs text-zinc-400">
-              <p className="font-medium text-amber-500">Stream URL not configured</p>
-              <p className="mt-1">
-                Add <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono">stream_url</code> or{" "}
-                <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono">ip_address</code> to camera
-                metadata to enable live streaming.
-              </p>
-              <p className="mt-2">
-                Example: Update camera with <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono">
-                  {`{"ip_address": "192.168.1.100"}`}
-                </code>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
