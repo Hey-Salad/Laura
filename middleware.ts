@@ -10,6 +10,7 @@ const PUBLIC_API_ROUTES = [
   "/api/auth/send-magic-link",
   "/api/twilio/prompt",
   "/api/cameras", // ESP32 camera endpoints
+  "/api/ai", // AI integration endpoints (OpenAI, ElevenLabs) for reCamera
 ];
 
 export async function middleware(request: NextRequest) {
