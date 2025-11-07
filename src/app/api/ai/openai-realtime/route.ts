@@ -65,17 +65,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`[OpenAI] Connection details provided for camera: ${camera_id}`);
 
+    // Include token directly in WebSocket URL for no-code Node-RED setup
+    const websocketUrl = `${workerUrl}/openai-realtime?token=${camera.api_token}`;
+
     return new Response(
       JSON.stringify({
-        websocket_url: `${workerUrl}/openai-realtime`,
-        camera_token: camera.api_token,
+        websocket_url: websocketUrl,
         model: "gpt-4o-realtime-preview-2024-10-01",
-        instructions: "Connect using WebSocket with X-Camera-Token header",
-        usage: {
-          headers: {
-            "X-Camera-Token": camera.api_token,
-          },
-        },
+        instructions: "Copy and paste the websocket_url directly into Node-RED WebSocket client",
+        note: "Token is included in URL - no additional headers needed",
       }),
       {
         status: 200,

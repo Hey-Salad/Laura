@@ -48,10 +48,12 @@ async function handleOpenAIProxy(request, env) {
     return new Response('Expected WebSocket', { status: 426 });
   }
 
-  // Validate camera token
-  const cameraToken = request.headers.get('X-Camera-Token');
+  // Get camera token from query parameter or header
+  const url = new URL(request.url);
+  const cameraToken = url.searchParams.get('token') || request.headers.get('X-Camera-Token');
+
   if (!cameraToken) {
-    return new Response('Missing X-Camera-Token header', { status: 401 });
+    return new Response('Missing camera token. Provide as ?token=xxx or X-Camera-Token header', { status: 401 });
   }
 
   // Verify token with Supabase

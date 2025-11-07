@@ -67,7 +67,7 @@
     "type": "function",
     "z": "ai_integration_tab",
     "name": "Store Credentials",
-    "func": "const response = msg.payload;\n\nif (response.websocket_url && response.camera_token) {\n    flow.set('OPENAI_WS_URL', response.websocket_url);\n    flow.set('CAMERA_TOKEN', response.camera_token);\n    node.warn('✅ Secure WebSocket proxy configured');\n    node.warn('📍 WebSocket URL: ' + response.websocket_url);\n} else {\n    node.warn('⚠️ Failed to configure secure proxy');\n    node.error('Response: ' + JSON.stringify(response));\n}\n\nreturn msg;",
+    "func": "const response = msg.payload;\n\nif (response.websocket_url) {\n    flow.set('OPENAI_WS_URL', response.websocket_url);\n    node.warn('✅ Secure WebSocket proxy configured');\n    node.warn('📍 WebSocket URL (with token): ' + response.websocket_url);\n    node.warn('🎯 COPY THIS URL TO WEBSOCKET CLIENT CONFIG');\n} else {\n    node.warn('⚠️ Failed to configure secure proxy');\n    node.error('Response: ' + JSON.stringify(response));\n}\n\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "x": 1100,

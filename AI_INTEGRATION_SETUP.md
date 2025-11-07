@@ -185,38 +185,23 @@ Expected response:
 2. Menu (☰) → Import → Select File
 3. Import: `recamera-ai-integration-flow.json`
 
-### Configure WebSocket Client
+### Configure WebSocket Client (No-Code!)
 
-The WebSocket client node needs manual configuration to add the camera token header:
+The flow automatically fetches the WebSocket URL with token included:
 
-1. Double-click the "openai_ws_client" configuration node (at the bottom of the flow)
-2. Update the **Path** field with your Cloudflare Worker URL:
+1. **Deploy** the flow in Node-RED
+2. Watch the Debug panel - you'll see:
    ```
-   wss://heysalad-openai-proxy.YOUR-SUBDOMAIN.workers.dev/openai-realtime
+   ✅ Secure WebSocket proxy configured
+   📍 WebSocket URL (with token): wss://heysalad-openai-proxy.YOUR-SUBDOMAIN.workers.dev/openai-realtime?token=xxx
+   🎯 COPY THIS URL TO WEBSOCKET CLIENT CONFIG
    ```
-3. **Important**: Node-RED's WebSocket client doesn't support custom headers directly
+3. **Copy the URL** from the debug message
+4. Double-click the `openai_ws_client` configuration node (at the bottom of the flow)
+5. **Paste the URL** into the "Path" field
+6. Click "Done" and **Deploy** again
 
-#### Workaround for WebSocket Headers
-
-Since Node-RED's built-in WebSocket client doesn't support custom headers, you have two options:
-
-**Option A: Use WebSocket URL with Token (Simpler)**
-
-Update the Cloudflare Worker to accept token as query parameter:
-```
-wss://heysalad-openai-proxy.YOUR-SUBDOMAIN.workers.dev/openai-realtime?token=YOUR_CAMERA_TOKEN
-```
-
-**Option B: Use node-red-contrib-websocket-client (Better)**
-
-Install the advanced WebSocket client that supports headers:
-```bash
-# On reCamera via SSH
-cd ~/.node-red
-npm install node-red-contrib-websocket-client
-```
-
-Then restart Node-RED and use the new WebSocket client node with custom headers.
+**That's it!** The token is included in the URL, so no headers or manual configuration needed. This is what makes it truly no-code! 🎉
 
 ### Deploy Flow
 

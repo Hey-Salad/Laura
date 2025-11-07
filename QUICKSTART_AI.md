@@ -99,11 +99,16 @@ You should see:
 
 **Important**: The `camera_token` is returned (not your OpenAI API key). This is secure! ✅
 
-### Step 5: Configure Node-RED on reCamera
+### Step 5: Configure Node-RED on reCamera (No-Code!)
 
 1. Import the flow: `recamera-ai-integration-flow.json`
-2. Update the WebSocket client configuration with your Worker URL
-3. Deploy and test!
+2. **Deploy** the flow (it will fetch the WebSocket URL automatically)
+3. Watch the Debug panel for the message: `🎯 COPY THIS URL TO WEBSOCKET CLIENT CONFIG`
+4. Double-click the `openai_ws_client` config node at the bottom
+5. **Paste the URL** from the debug message (token is already included!)
+6. Deploy again and test!
+
+**That's it!** No headers, no manual token configuration - just copy/paste the URL! 🎉
 
 ## 📚 Complete Documentation
 

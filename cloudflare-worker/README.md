@@ -83,18 +83,23 @@ Expected response:
 
 ### WebSocket Connection (requires valid camera token)
 
-You can't easily test WebSocket from curl, but from Node-RED or JavaScript:
+The Worker accepts camera tokens in two ways:
 
+**Option 1: Query Parameter (Recommended for Node-RED)**
+```
+wss://heysalad-openai-proxy.YOUR-SUBDOMAIN.workers.dev/openai-realtime?token=YOUR_CAMERA_TOKEN
+```
+
+**Option 2: Header (For custom clients)**
 ```javascript
 const ws = new WebSocket('wss://heysalad-openai-proxy.YOUR-SUBDOMAIN.workers.dev/openai-realtime', {
   headers: {
     'X-Camera-Token': 'your-camera-api-token'
   }
 });
-
-ws.onopen = () => console.log('Connected to OpenAI via proxy');
-ws.onmessage = (event) => console.log('Message from OpenAI:', event.data);
 ```
+
+Node-RED users should use **Option 1** (query parameter) since the built-in WebSocket client doesn't support custom headers.
 
 ## Security Features
 
