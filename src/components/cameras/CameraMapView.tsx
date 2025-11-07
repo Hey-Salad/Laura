@@ -88,7 +88,11 @@ export default function CameraMapView({ cameras, onSelect, selectedCameraId }: C
         })
           .setLngLat([camera.location_lon, camera.location_lat])
           .setPopup(
-            new mapboxgl.Popup({ className: "heysalad-popup" })
+            new mapboxgl.Popup({
+              className: "heysalad-popup",
+              closeButton: false,
+              maxWidth: "none"
+            })
               .setHTML(getPopupHTML(camera))
           )
           .addTo(mapRef.current!);
@@ -120,22 +124,12 @@ export default function CameraMapView({ cameras, onSelect, selectedCameraId }: C
     });
   }, [selectedCameraId]);
 
-  return <div ref={containerRef} className="h-[45vh] w-full rounded-xl shadow-xl" />;
+  return <div ref={containerRef} className="h-full w-full" />;
 }
 
 function getStatusColor(status: Camera["status"]): string {
-  switch (status) {
-    case "online":
-      return "#22c55e"; // green
-    case "offline":
-      return "#71717a"; // zinc
-    case "busy":
-      return "#eab308"; // yellow
-    case "error":
-      return "#ef4444"; // red
-    default:
-      return "#71717a"; // zinc
-  }
+  // All markers use HeySalad red color
+  return "#ed4c4c"; // HeySalad cherry red
 }
 
 function getPopupHTML(camera: Camera): string {
@@ -143,14 +137,25 @@ function getPopupHTML(camera: Camera): string {
                       camera.status === "busy" ? "🟡" :
                       camera.status === "error" ? "🔴" : "⚫";
 
+  const lastSeen = camera.last_seen
+    ? new Date(camera.last_seen).toLocaleString()
+    : 'Never';
+
   return `
-    <div class="popup-content">
-      <strong>${camera.camera_name}</strong><br/>
-      <span class="font-mono text-xs">${camera.camera_id}</span><br/>
-      <span class="status-${camera.status}">${statusEmoji} ${camera.status.toUpperCase()}</span><br/>
-      ${camera.assigned_to ? `<span class="text-xs">📍 ${camera.assigned_to}</span>` : ''}
-      ${camera.battery_level !== undefined ? `<br/><span class="text-xs">🔋 ${camera.battery_level}%</span>` : ''}
-      ${camera.wifi_signal !== undefined ? `<span class="text-xs ml-2">📶 ${camera.wifi_signal} dBm</span>` : ''}
+    <div style="background: #000; color: #fff; padding: 12px; border-radius: 8px; min-width: 200px;">
+      <div style="font-weight: 600; font-size: 14px; margin-bottom: 6px;">${camera.camera_name}</div>
+      <div style="font-family: monospace; font-size: 11px; color: #ed4c4c; margin-bottom: 8px;">${camera.camera_id}</div>
+      <div style="font-size: 12px; margin-bottom: 6px;">
+        <span style="display: inline-flex; align-items: center; gap: 4px;">
+          ${statusEmoji} ${camera.status.toUpperCase()}
+        </span>
+      </div>
+      ${camera.assigned_to ? `<div style="font-size: 11px; color: #a1a1aa; margin-bottom: 4px;">📍 ${camera.assigned_to}</div>` : ''}
+      <div style="font-size: 11px; color: #a1a1aa; margin-top: 8px; padding-top: 8px; border-top: 1px solid #27272a;">
+        <div style="margin-bottom: 3px;">🕒 Last seen: ${lastSeen}</div>
+        ${camera.battery_level !== undefined ? `<div style="margin-bottom: 3px;">🔋 Battery: ${camera.battery_level}%</div>` : ''}
+        ${camera.wifi_signal !== undefined ? `<div>📶 WiFi: ${camera.wifi_signal} dBm</div>` : ''}
+      </div>
     </div>
   `;
 }

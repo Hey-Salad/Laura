@@ -127,7 +127,15 @@ curl https://laura.heysalad.app/api/cameras/34236c48-2dae-4fe6-9bae-27e640f84d71
 ## AI Integration (OpenAI + ElevenLabs)
 
 ### Overview
-Laura provides AI integration APIs to enable intelligent camera interactions using OpenAI Realtime API (GPT-4o) and ElevenLabs text-to-speech. The reCamera can capture video/audio, detect objects, query OpenAI for intelligent responses, convert responses to speech, and execute gimbal commands based on AI decisions.
+Laura provides **secure** AI integration via Cloudflare Workers WebSocket proxy. The reCamera can capture video/audio, detect objects, query OpenAI for intelligent responses, convert responses to speech, and execute gimbal commands based on AI decisions.
+
+**Security Model**:
+- OpenAI API keys are never exposed to cameras
+- WebSocket connections proxied through Cloudflare Workers
+- Camera token authentication for all AI endpoints
+- Tokens validated against Supabase `cameras` table
+
+**📘 Complete Setup Guide**: See [AI_INTEGRATION_SETUP.md](AI_INTEGRATION_SETUP.md) for detailed deployment instructions.
 
 ### Architecture Flow
 1. **Camera Capture** → reCamera captures video frames + audio

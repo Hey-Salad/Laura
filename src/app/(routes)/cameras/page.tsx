@@ -9,6 +9,7 @@ import CameraInfoPanel from "@/components/cameras/CameraInfoPanel";
 import CameraStreamPreview from "@/components/cameras/CameraStreamPreview";
 import PhotoGallery from "@/components/cameras/PhotoGallery";
 import CameraMapView from "@/components/cameras/CameraMapView";
+import CommandHistory from "@/components/cameras/CommandHistory";
 import { useToast } from "@/lib/hooks/useToast";
 import { Camera as CameraIcon, RefreshCw } from "lucide-react";
 
@@ -151,76 +152,166 @@ export default function CamerasPage() {
   }
 
   return (
-    <section className="space-y-5">
-      {/* Header */}
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <CameraIcon className="h-7 w-7 text-brand-cherry" />
-          <div>
-            <h1 className="text-2xl font-bold text-white">Camera Control</h1>
-            <p className="text-xs text-zinc-400">
-              Manage and control your ESP32-S3 AI cameras remotely
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
-      </header>
-
-      {/* Camera Map */}
-      {cameras.some(c => c.location_lat && c.location_lon) && (
-        <div>
-          <h2 className="mb-3 text-base font-semibold text-white">
-            Camera Locations
-          </h2>
+    <section className="relative h-[calc(100vh-120px)] overflow-hidden">
+      {/* Full-screen Map Background */}
+      <div className="absolute inset-0">
+        {cameras.some(c => c.location_lat && c.location_lon) ? (
           <CameraMapView
             cameras={cameras}
             selectedCameraId={selectedCameraId || undefined}
             onSelect={(camera) => setSelectedCameraId(camera.id)}
           />
-        </div>
-      )}
-
-      {/* Camera List */}
-      <div>
-        <h2 className="mb-3 text-base font-semibold text-white">
-          Cameras ({cameras.length})
-        </h2>
-        <CameraList
-          cameras={cameras}
-          selectedCameraId={selectedCameraId || undefined}
-          onSelectCamera={setSelectedCameraId}
-        />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-zinc-950">
+            <p className="text-zinc-500">No cameras with location data</p>
+          </div>
+        )}
       </div>
 
-      {/* Selected Camera Details */}
-      {selectedCamera ? (
-        <div className="grid gap-5 lg:grid-cols-2">
-          {/* Left Column */}
-          <div className="space-y-5">
-            <CameraInfoPanel camera={selectedCamera} />
+      {/* Floating Refresh Button */}
+      <div className="absolute right-4 top-4 z-10"
+        style={{ right: selectedCamera ? '500px' : '16px' }}
+      >
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center gap-1.5 rounded-lg border border-zinc-800/50 bg-black/90 px-3 py-2 text-xs font-medium text-white backdrop-blur-xl transition-colors hover:bg-zinc-800 disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
+      </div>
+
+      {/* Floating Camera Cards */}
+      <div className="absolute left-4 bottom-4 z-10 flex gap-3"
+        style={{ maxWidth: selectedCamera ? 'calc(100% - 520px)' : 'calc(100% - 32px)' }}
+      >
+        {cameras.map((camera) => (
+          <button
+            key={camera.id}
+            onClick={() => setSelectedCameraId(camera.id)}
+            className={`rounded-xl border bg-black/90 p-3 backdrop-blur-xl transition-all hover:scale-105 ${
+              selectedCameraId === camera.id
+                ? "border-brand-cherry"
+                : "border-zinc-800/50"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`h-2 w-2 rounded-full ${
+                camera.status === "online" ? "bg-green-500" : "bg-zinc-500"
+              }`} />
+              <div className="text-left">
+                <p className="text-xs font-semibold text-white">{camera.camera_id}</p>
+                <p className="text-[10px] text-zinc-400">{camera.assigned_to || 'Unassigned'}</p>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Selected Camera Sidebar */}
+      {selectedCamera && (
+        <div className="absolute right-0 top-0 bottom-0 z-20 w-[480px] overflow-y-auto border-l border-zinc-800/50 bg-black/95 backdrop-blur-xl shadow-2xl">
+          {/* Sidebar Header */}
+          <div className="sticky top-0 z-10 border-b border-zinc-800/50 bg-black/95 p-4 backdrop-blur-xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-white">{selectedCamera.camera_name}</h2>
+                <p className="font-mono text-xs text-brand-cherry">{selectedCamera.camera_id}</p>
+                {selectedCamera.assigned_to && (
+                  <p className="mt-1 text-xs text-zinc-400">📍 {selectedCamera.assigned_to}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setSelectedCameraId(null)}
+                className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-white"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Status Bar */}
+            <div className="mt-3 flex items-center gap-3">
+              <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                selectedCamera.status === "online"
+                  ? "bg-green-500/10 text-green-500"
+                  : "bg-zinc-500/10 text-zinc-500"
+              }`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                {selectedCamera.status.toUpperCase()}
+              </span>
+              <span className="text-xs text-zinc-400">
+                Last seen: {selectedCamera.last_seen
+                  ? new Date(selectedCamera.last_seen).toLocaleString()
+                  : 'Never'}
+              </span>
+            </div>
+          </div>
+
+          {/* Video Stream - Large */}
+          <div className="p-4">
+            <div className="h-[320px]">
+              <CameraStreamPreview camera={selectedCamera} />
+            </div>
+          </div>
+
+          {/* Device Stats */}
+          <div className="px-4 pb-4">
+            <div className="grid grid-cols-4 gap-2 rounded-xl border border-zinc-800/50 bg-zinc-900/50 p-3">
+              <div className="text-center">
+                <div className={`text-lg font-bold ${
+                  (selectedCamera.battery_level || 0) > 60 ? "text-green-500" :
+                  (selectedCamera.battery_level || 0) > 30 ? "text-yellow-500" : "text-red-500"
+                }`}>
+                  {selectedCamera.battery_level || 0}%
+                </div>
+                <div className="text-[10px] text-zinc-500">Battery</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-lg font-bold ${
+                  (selectedCamera.wifi_signal || -100) > -60 ? "text-green-500" :
+                  (selectedCamera.wifi_signal || -100) > -75 ? "text-yellow-500" : "text-red-500"
+                }`}>
+                  {selectedCamera.wifi_signal || 'N/A'}
+                </div>
+                <div className="text-[10px] text-zinc-500">WiFi (dBm)</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-500">
+                  {selectedCamera.location_lat?.toFixed(2) || '--'}
+                </div>
+                <div className="text-[10px] text-zinc-500">Latitude</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-500">
+                  {selectedCamera.location_lon?.toFixed(2) || '--'}
+                </div>
+                <div className="text-[10px] text-zinc-500">Longitude</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Camera Controls */}
+          <div className="px-4 pb-4">
             <CameraControl camera={selectedCamera} />
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-5">
-            <CameraStreamPreview camera={selectedCamera} />
+          {/* Command History */}
+          <div className="px-4 pb-4">
+            <CommandHistory cameraId={selectedCamera.id} />
+          </div>
+
+          {/* Device Information */}
+          <div className="px-4 pb-4">
+            <CameraInfoPanel camera={selectedCamera} />
+          </div>
+
+          {/* Photo Gallery */}
+          <div className="px-4 pb-4">
             <PhotoGallery cameraId={selectedCamera.id} />
           </div>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-zinc-800/50 bg-zinc-950/80 p-8 text-center backdrop-blur">
-          <p className="text-zinc-400">
-            {cameras.length === 0
-              ? "No cameras registered. Connect your ESP32-S3 cameras to get started."
-              : "Select a camera to view controls and photos."}
-          </p>
         </div>
       )}
     </section>

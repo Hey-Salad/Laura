@@ -1,0 +1,13 @@
+{
+  "name": "heysalad-openai-proxy",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for secure OpenAI WebSocket proxy",
+  "main": "openai-proxy.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}

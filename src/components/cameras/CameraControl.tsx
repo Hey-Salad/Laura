@@ -171,123 +171,52 @@ export default function CameraControl({ camera }: CameraControlProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Camera Info Header */}
-      <div className="rounded-xl border border-zinc-800/50 bg-zinc-950/80 p-6 backdrop-blur">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-white">{camera.camera_name}</h2>
-            <p className="font-mono text-sm text-brand-peach">{camera.camera_id}</p>
-            {camera.assigned_to && (
-              <p className="mt-1 text-sm text-zinc-400">Assigned to: {camera.assigned_to}</p>
-            )}
-          </div>
-          <div className={`rounded-lg px-3 py-1 ${getStatusColor(camera.status)}`}>
-            <span className="font-semibold uppercase">
-              {camera.status}
-            </span>
-          </div>
-        </div>
+    <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 p-4">
+      <h3 className="mb-3 text-sm font-semibold text-white">Camera Controls</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {commandButtons.map((btn) => {
+          const Icon = btn.icon;
+          const isLoading = loading === btn.type;
+          const isDisabled = camera.status !== "online" || isLoading;
 
-        {/* Live Stats */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="rounded-lg bg-zinc-900/50 p-3">
-            <div className="flex items-center gap-2">
-              <Battery className={`h-5 w-5 ${getBatteryColor(camera.battery_level)}`} />
-              <div>
-                <p className="text-xs text-zinc-400">Battery</p>
-                <p className="text-lg font-semibold text-white">
-                  {camera.battery_level !== undefined ? `${camera.battery_level}%` : "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg bg-zinc-900/50 p-3">
-            <div className="flex items-center gap-2">
-              <Signal className={`h-5 w-5 ${getSignalColor(camera.wifi_signal)}`} />
-              <div>
-                <p className="text-xs text-zinc-400">WiFi Signal</p>
-                <p className="text-lg font-semibold text-white">
-                  {camera.wifi_signal !== undefined ? `${camera.wifi_signal} dBm` : "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg bg-zinc-900/50 p-3">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-brand-lime" />
-              <div>
-                <p className="text-xs text-zinc-400">Location</p>
-                <p className="text-xs font-semibold text-white">
-                  {camera.location_lat && camera.location_lon
-                    ? `${camera.location_lat.toFixed(2)}, ${camera.location_lon.toFixed(2)}`
-                    : "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg bg-zinc-900/50 p-3">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-zinc-500" />
-              <div>
-                <p className="text-xs text-zinc-400">Last Seen</p>
-                <p className="text-xs font-semibold text-white">
-                  {formatLastSeen(camera.last_seen)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Command Buttons */}
-      <div className="rounded-xl border border-zinc-800/50 bg-zinc-950/80 p-6 backdrop-blur">
-        <h3 className="mb-4 text-lg font-semibold text-white">Camera Controls</h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {commandButtons.map((btn) => {
-            const Icon = btn.icon;
-            const isLoading = loading === btn.type;
-            const isDisabled = camera.status !== "online" || isLoading;
-
-            return (
-              <button
-                key={btn.type}
-                onClick={() => {
-                  if (!isDisabled) {
-                    if ('customHandler' in btn && btn.customHandler) {
-                      btn.customHandler();
-                    } else {
-                      sendCommand(btn.type, btn.payload);
-                    }
+          return (
+            <button
+              key={btn.type}
+              onClick={() => {
+                if (!isDisabled) {
+                  if ('customHandler' in btn && btn.customHandler) {
+                    btn.customHandler();
+                  } else {
+                    sendCommand(btn.type, btn.payload);
                   }
-                }}
-                disabled={isDisabled}
-                className={`group relative flex items-center gap-3 rounded-lg border p-4 transition-all ${
-                  isDisabled
-                    ? "cursor-not-allowed border-zinc-800 bg-zinc-900/50 opacity-50"
-                    : `border-zinc-700 bg-zinc-900/80 hover:border-${btn.color} hover:bg-${btn.color}/10`
-                }`}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-brand-peach" />
-                ) : (
-                  <Icon className={`h-5 w-5 text-${btn.color}`} />
-                )}
-                <span className="font-medium text-white">{btn.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {camera.status !== "online" && (
-          <p className="mt-4 rounded-lg bg-yellow-500/10 p-3 text-center text-sm text-yellow-500">
-            Camera is {camera.status}. Commands are disabled.
-          </p>
-        )}
+                }
+              }}
+              disabled={isDisabled}
+              className={`flex items-center gap-2 rounded-lg border p-3 transition-all ${
+                isDisabled
+                  ? "cursor-not-allowed border-zinc-800 bg-zinc-900/50 opacity-50"
+                  : `border-zinc-700 bg-zinc-900/80 hover:border-${btn.color} hover:bg-${btn.color}/10`
+              }`}
+              title={btn.label}
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-brand-peach" />
+              ) : (
+                <Icon className={`h-5 w-5 text-${btn.color}`} />
+              )}
+              <span className="text-sm font-medium text-white">{btn.label}</span>
+            </button>
+          );
+        })}
       </div>
+
+      {camera.status !== "online" && (
+        <div className="mt-3 rounded-lg bg-yellow-500/10 p-3 text-center">
+          <p className="text-xs text-yellow-500">
+            ⚠️ Camera is {camera.status}. Controls are disabled.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,56 +26,22 @@ body {
   background-color: rgba(237, 76, 76, 0.6);
 }
 
-/* Mapbox Popup Styling - HeySalad Brand */
+/* Mapbox Popup Styling - HeySalad Brand (Black with white text) */
 .heysalad-popup .mapboxgl-popup-content {
-  background-color: #ffd0cd;
-  padding: 12px 16px;
+  background-color: #000000;
+  padding: 0;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(237, 76, 76, 0.3);
+  border: 1px solid #27272a;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   font-family: var(--font-figtree), system-ui, sans-serif;
 }
 
-.heysalad-popup .popup-content {
-  color: #000000;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.heysalad-popup .popup-content strong {
-  color: #000000;
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.heysalad-popup .popup-content .status-active {
-  color: #000000;
-  font-size: 12px;
-}
-
-.heysalad-popup .popup-content .status-delayed {
-  color: #000000;
-  font-size: 12px;
-}
-
-.heysalad-popup .popup-content .status-delivered {
-  color: #000000;
-  font-size: 12px;
-}
-
 .heysalad-popup .mapboxgl-popup-tip {
-  border-top-color: #ffd0cd;
+  border-top-color: #000000;
 }
 
 .heysalad-popup .mapboxgl-popup-close-button {
-  color: #000000;
-  font-size: 20px;
-  padding: 4px 8px;
-  font-weight: 600;
-}
-
-.heysalad-popup .mapboxgl-popup-close-button:hover {
-  background-color: rgba(237, 76, 76, 0.1);
-  color: #ed4c4c;
+  display: none;
 }
 
 /* Toast Animation */

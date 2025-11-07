@@ -3,6 +3,41 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
+// Validate gimbal command parameters
+function validateGimbalCommand(command_type: string, payload: any): { valid: boolean; error?: string } {
+  switch (command_type) {
+    case "gimbal_set_angle":
+      if (typeof payload.yaw_angle !== 'number' || typeof payload.pitch_angle !== 'number') {
+        return { valid: false, error: 'yaw_angle and pitch_angle must be numbers' };
+      }
+      if (payload.yaw_angle < -180 || payload.yaw_angle > 180) {
+        return { valid: false, error: 'yaw_angle must be between -180 and 180' };
+      }
+      if (payload.pitch_angle < -90 || payload.pitch_angle > 90) {
+        return { valid: false, error: 'pitch_angle must be between -90 and 90' };
+      }
+      if (payload.speed && (payload.speed < 1 || payload.speed > 255)) {
+        return { valid: false, error: 'speed must be between 1 and 255' };
+      }
+      break;
+
+    case "gimbal_offset":
+      if (typeof payload.yaw_delta !== 'number' || typeof payload.pitch_delta !== 'number') {
+        return { valid: false, error: 'yaw_delta and pitch_delta must be numbers' };
+      }
+      break;
+
+    case "gimbal_preset":
+      const validPresets = ['center', 'left', 'right', 'up', 'down'];
+      if (!validPresets.includes(payload.preset)) {
+        return { valid: false, error: `preset must be one of: ${validPresets.join(', ')}` };
+      }
+      break;
+  }
+
+  return { valid: true };
+}
+
 // POST /api/cameras/[id]/command - Send command to camera
 export async function POST(
   request: NextRequest,
@@ -52,6 +87,12 @@ export async function POST(
       "toggle_led",
       "play_sound",
       "save_photo",
+      // Gimbal commands for reCamera
+      "gimbal_set_angle",
+      "gimbal_offset",
+      "gimbal_get_angle",
+      "gimbal_preset",
+      "gimbal_stop",
     ];
 
     if (!validCommands.includes(command_type)) {
@@ -59,6 +100,17 @@ export async function POST(
         { error: `Invalid command_type. Must be one of: ${validCommands.join(", ")}` },
         { status: 400 }
       );
+    }
+
+    // Validate gimbal command parameters
+    if (command_type.startsWith('gimbal_')) {
+      const validation = validateGimbalCommand(command_type, payload);
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: validation.error },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if camera exists
@@ -116,19 +168,13 @@ export async function POST(
       payload: commandMessage,
     });
 
-    // Update command status to sent
-    await supabase
-      .from("camera_commands")
-      .update({ status: "sent" })
-      .eq("id", command.id);
+    // Keep status as "pending" so device can poll for it
+    // Device will update to "completed" or "failed" after execution
 
     return NextResponse.json(
       {
         message: "Command sent successfully",
-        command: {
-          ...command,
-          status: "sent",
-        },
+        command: command,
         command_id: commandId,
       },
       { status: 200 }
