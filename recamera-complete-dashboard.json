@@ -1,5 +1,17 @@
 [
   {
+    "id": "f7d5cf3810421cf3",
+    "type": "subflow",
+    "name": "Default Pages",
+    "info": "",
+    "category": "Vision AI",
+    "in": [],
+    "out": [],
+    "env": [],
+    "meta": {},
+    "color": "#DDAA99"
+  },
+  {
     "id": "ai_integration_tab",
     "type": "tab",
     "label": "HeySalad AI Integration",
@@ -133,7 +145,7 @@
     "type": "websocket out",
     "z": "ai_integration_tab",
     "name": "OpenAI WebSocket Out",
-    "server": "openai_ws_server",
+    "server": "",
     "client": "openai_ws_client",
     "x": 180,
     "y": 280,
@@ -144,7 +156,7 @@
     "type": "websocket in",
     "z": "ai_integration_tab",
     "name": "OpenAI WebSocket In",
-    "server": "openai_ws_server",
+    "server": "",
     "client": "openai_ws_client",
     "x": 180,
     "y": 360,
@@ -197,7 +209,7 @@
     "type": "function",
     "z": "ai_integration_tab",
     "name": "Play Audio on Speaker",
-    "func": "// Audio buffer is in msg.payload\n// TODO: Play audio through reCamera speaker\n// This requires audio output node or exec command\n\nnode.warn('🔊 Audio received, size:', msg.payload.length, 'bytes');\n\n// Example: Save to temp file and play\nmsg.filename = '/tmp/tts_response.mp3';\nmsg.play_command = 'aplay /tmp/tts_response.mp3';\n\nreturn msg;",
+    "func": "// Audio buffer is in msg.payload\nnode.warn('🔊 Audio received, size:', msg.payload.length, 'bytes');\n\nmsg.filename = '/tmp/tts_response.mp3';\nmsg.play_command = 'aplay /tmp/tts_response.mp3';\n\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "x": 180,
@@ -355,6 +367,45 @@
     "wires": []
   },
   {
+    "id": "ai_control_page_ui",
+    "type": "ui-template",
+    "z": "f7d5cf3810421cf3",
+    "group": "ai_assistant_group",
+    "page": "",
+    "ui": "",
+    "name": "AI Assistant Controls",
+    "order": 1,
+    "width": "12",
+    "height": "8",
+    "head": "",
+    "format": "<template>\n  <div class=\"ai-controls\">\n    <h2>🤖 HeySalad AI Assistant</h2>\n    \n    <div class=\"status-section\">\n      <h3>Connection Status</h3>\n      <div class=\"status-grid\">\n        <div class=\"status-item\">\n          <span class=\"status-label\">Camera:</span>\n          <span class=\"status-value\" :class=\"cameraStatus\">{{ cameraStatusText }}</span>\n        </div>\n        <div class=\"status-item\">\n          <span class=\"status-label\">OpenAI:</span>\n          <span class=\"status-value\" :class=\"aiStatus\">{{ aiStatusText }}</span>\n        </div>\n        <div class=\"status-item\">\n          <span class=\"status-label\">Gimbal:</span>\n          <span class=\"status-value\" :class=\"gimbalStatus\">{{ gimbalStatusText }}</span>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"control-section\">\n      <h3>Quick Actions</h3>\n      <div class=\"button-grid\">\n        <button @click=\"testAI\" class=\"action-btn\">\n          💬 Test AI Query\n        </button>\n        <button @click=\"testTTS\" class=\"action-btn\">\n          🔊 Test Speech\n        </button>\n        <button @click=\"gimbalCenter\" class=\"action-btn\">\n          🎯 Center Gimbal\n        </button>\n        <button @click=\"refreshStatus\" class=\"action-btn\">\n          🔄 Refresh Status\n        </button>\n      </div>\n    </div>\n\n    <div class=\"info-section\">\n      <h3>Configuration</h3>\n      <div class=\"info-grid\">\n        <div class=\"info-item\">\n          <strong>Camera ID:</strong> recamera-gimbal-001\n        </div>\n        <div class=\"info-item\">\n          <strong>Model:</strong> GPT-4o Realtime\n        </div>\n        <div class=\"info-item\">\n          <strong>Voice:</strong> Rachel (ElevenLabs)\n        </div>\n      </div>\n    </div>\n\n    <div class=\"log-section\">\n      <h3>Recent Activity</h3>\n      <div class=\"log-box\">\n        <div v-for=\"(log, index) in logs\" :key=\"index\" class=\"log-entry\">\n          {{ log }}\n        </div>\n      </div>\n    </div>\n  </div>\n</template>\n\n<script>\n  export default {\n    data() {\n      return {\n        cameraStatus: 'online',\n        cameraStatusText: 'Online',\n        aiStatus: 'connected',\n        aiStatusText: 'Connected',\n        gimbalStatus: 'ready',\n        gimbalStatusText: 'Ready',\n        logs: [\n          '✅ AI configuration initialized',\n          '📡 Connected to Laura API',\n          '🤖 System ready'\n        ]\n      };\n    },\n    methods: {\n      testAI() {\n        this.addLog('💬 Testing AI query...');\n        this.send({ payload: { action: 'test_ai' } });\n      },\n      testTTS() {\n        this.addLog('🔊 Testing text-to-speech...');\n        this.send({ payload: { action: 'test_tts' } });\n      },\n      gimbalCenter() {\n        this.addLog('🎯 Centering gimbal...');\n        this.send({ payload: { action: 'gimbal_center' } });\n      },\n      refreshStatus() {\n        this.addLog('🔄 Refreshing status...');\n        this.send({ payload: { action: 'refresh' } });\n      },\n      addLog(message) {\n        const timestamp = new Date().toLocaleTimeString();\n        this.logs.unshift(`[${timestamp}] ${message}`);\n        if (this.logs.length > 10) {\n          this.logs.pop();\n        }\n      }\n    },\n    watch: {\n      msg: function(msg) {\n        if (msg.log) {\n          this.addLog(msg.log);\n        }\n        if (msg.status) {\n          this.cameraStatus = msg.status.camera || this.cameraStatus;\n          this.aiStatus = msg.status.ai || this.aiStatus;\n          this.gimbalStatus = msg.status.gimbal || this.gimbalStatus;\n        }\n      }\n    }\n  };\n</script>\n\n<style scoped>\n  .ai-controls {\n    padding: 20px;\n    font-family: Arial, sans-serif;\n  }\n  \n  h2 {\n    color: #87ba32;\n    margin-bottom: 20px;\n  }\n  \n  h3 {\n    color: #333;\n    margin: 15px 0 10px 0;\n    font-size: 16px;\n  }\n  \n  .status-section, .control-section, .info-section, .log-section {\n    margin-bottom: 25px;\n    padding: 15px;\n    background: #f5f5f5;\n    border-radius: 8px;\n  }\n  \n  .status-grid {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 10px;\n  }\n  \n  .status-item {\n    padding: 10px;\n    background: white;\n    border-radius: 6px;\n    text-align: center;\n  }\n  \n  .status-label {\n    display: block;\n    font-size: 12px;\n    color: #666;\n    margin-bottom: 5px;\n  }\n  \n  .status-value {\n    display: block;\n    font-weight: bold;\n    font-size: 14px;\n  }\n  \n  .status-value.online, .status-value.connected, .status-value.ready {\n    color: #87ba32;\n  }\n  \n  .status-value.offline, .status-value.disconnected, .status-value.error {\n    color: #d32f2f;\n  }\n  \n  .button-grid {\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n    gap: 10px;\n  }\n  \n  .action-btn {\n    padding: 15px 20px;\n    background: #87ba32;\n    color: white;\n    border: none;\n    border-radius: 6px;\n    cursor: pointer;\n    font-size: 14px;\n    font-weight: bold;\n    transition: background 0.3s;\n  }\n  \n  .action-btn:hover {\n    background: #6a9428;\n  }\n  \n  .info-grid {\n    display: grid;\n    gap: 8px;\n  }\n  \n  .info-item {\n    padding: 8px 12px;\n    background: white;\n    border-radius: 4px;\n    font-size: 13px;\n  }\n  \n  .log-box {\n    background: #1e1e1e;\n    color: #ddd;\n    padding: 12px;\n    border-radius: 6px;\n    max-height: 200px;\n    overflow-y: auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n  \n  .log-entry {\n    padding: 4px 0;\n    border-bottom: 1px solid #333;\n  }\n  \n  .log-entry:last-child {\n    border-bottom: none;\n  }\n</style>",
+    "storeOutMessages": true,
+    "passthru": true,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 620,
+    "y": 360,
+    "wires": [["ai_action_handler"]]
+  },
+  {
+    "id": "ai_action_handler",
+    "type": "function",
+    "z": "f7d5cf3810421cf3",
+    "name": "Handle AI Actions",
+    "func": "const action = msg.payload.action;\n\nif (action === 'test_ai') {\n    return [{ payload: { detected_objects: [{ class: 'person' }, { class: 'pizza' }] } }, null, null];\n} else if (action === 'test_tts') {\n    return [null, { ai_response: 'Hello from HeySalad! The kitchen looks great today.' }, null];\n} else if (action === 'gimbal_center') {\n    return [null, null, { gimbal_command: { preset: 'center' } }];\n} else if (action === 'refresh') {\n    return [null, null, null, { payload: 'refresh' }];\n}\n\nreturn null;",
+    "outputs": 4,
+    "noerr": 0,
+    "x": 870,
+    "y": 360,
+    "wires": [
+      ["process_detections"],
+      ["send_to_elevenlabs"],
+      ["send_gimbal_command"],
+      []
+    ]
+  },
+  {
     "id": "openai_ws_client",
     "type": "websocket-client",
     "path": "wss://heysalad-openai-proxy.heysalad-o.workers.dev/openai-realtime?token=cNf2w6BmZrItVdakHxqUkD7hY/y1swO0NGLBvtI0EXI=",
@@ -362,5 +413,74 @@
     "wholemsg": "true",
     "hb": "0",
     "subprotocol": ""
+  },
+  {
+    "id": "ai_assistant_group",
+    "type": "ui-group",
+    "name": "AI Assistant",
+    "page": "ai_assistant_page",
+    "width": "12",
+    "height": "1",
+    "order": 1,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "ai_assistant_page",
+    "type": "ui-page",
+    "name": "AI Assistant",
+    "ui": "e2f7615831d73e4b",
+    "path": "/ai-assistant",
+    "icon": "smart_toy",
+    "layout": "grid",
+    "theme": "f5ee49967f8103a8",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": "0",
+        "cols": "3"
+      },
+      {
+        "name": "Tablet",
+        "px": "576",
+        "cols": "6"
+      },
+      {
+        "name": "Small Desktop",
+        "px": "768",
+        "cols": "9"
+      },
+      {
+        "name": "Desktop",
+        "px": "1024",
+        "cols": "12"
+      }
+    ],
+    "order": 3,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "e2f7615831d73e4b",
+    "type": "ui-base",
+    "name": "HeySalad Dashboard",
+    "path": "/dashboard",
+    "includeClientData": true
+  },
+  {
+    "id": "f5ee49967f8103a8",
+    "type": "ui-theme",
+    "name": "HeySalad Theme",
+    "colors": {
+      "surface": "#ffffff",
+      "primary": "#87ba32",
+      "bgPage": "#eeeeee",
+      "groupBg": "#ffffff",
+      "groupOutline": "#cccccc"
+    }
   }
 ]

@@ -1,0 +1,216 @@
+{
+  "name": "HeySalad Laura MCP Configuration",
+  "version": "1.0.0",
+  "description": "Model Context Protocol configuration for HeySalad Laura AI integration system",
+  "servers": {
+    "filesystem": {
+      "enabled": true,
+      "description": "Access to project files and documentation",
+      "allowedPaths": [
+        "/Users/chilumbam/heysalad-laura/src",
+        "/Users/chilumbam/heysalad-laura/docs",
+        "/Users/chilumbam/heysalad-laura/scripts",
+        "/Users/chilumbam/heysalad-laura/*.md",
+        "/Users/chilumbam/heysalad-laura/*.json"
+      ],
+      "excludedPaths": [
+        "/Users/chilumbam/heysalad-laura/.env*",
+        "/Users/chilumbam/heysalad-laura/node_modules",
+        "/Users/chilumbam/heysalad-laura/.next"
+      ]
+    },
+    "github": {
+      "enabled": true,
+      "description": "GitHub repository integration for PR and issue management",
+      "repository": "Hey-Salad/Laura",
+      "capabilities": [
+        "read_issues",
+        "write_issues",
+        "read_pull_requests",
+        "write_pull_requests",
+        "read_code",
+        "write_code_reviews"
+      ]
+    },
+    "git": {
+      "enabled": true,
+      "description": "Local git operations and history analysis",
+      "repository": "/Users/chilumbam/heysalad-laura",
+      "capabilities": [
+        "read_commits",
+        "read_branches",
+        "read_diffs",
+        "analyze_history"
+      ]
+    },
+    "supabase": {
+      "enabled": true,
+      "description": "Supabase database access for camera and order data",
+      "projectRef": "ybecdgbzgldafwvzwkpd",
+      "capabilities": [
+        "read_cameras",
+        "read_orders",
+        "read_users",
+        "analyze_data"
+      ]
+    },
+    "openai": {
+      "enabled": true,
+      "description": "OpenAI API integration for code analysis and generation",
+      "models": [
+        "gpt-4",
+        "gpt-4o-realtime-preview-2024-10-01"
+      ],
+      "capabilities": [
+        "code_review",
+        "documentation_generation",
+        "bug_detection",
+        "performance_analysis",
+        "test_generation"
+      ]
+    },
+    "elevenlabs": {
+      "enabled": true,
+      "description": "ElevenLabs TTS integration for voice synthesis",
+      "voiceId": "21m00Tcm4TlvDq8ikWAM",
+      "capabilities": [
+        "text_to_speech",
+        "voice_synthesis"
+      ]
+    }
+  },
+  "workflows": {
+    "code_review": {
+      "description": "Automated AI code review workflow",
+      "triggers": ["pull_request_opened", "pull_request_synchronize"],
+      "steps": [
+        {
+          "name": "Analyze changes",
+          "server": "git",
+          "action": "get_diff"
+        },
+        {
+          "name": "Review code",
+          "server": "openai",
+          "action": "review_code"
+        },
+        {
+          "name": "Post review",
+          "server": "github",
+          "action": "create_review_comment"
+        }
+      ]
+    },
+    "documentation_sync": {
+      "description": "Keep documentation in sync with code changes",
+      "triggers": ["code_changed"],
+      "steps": [
+        {
+          "name": "Detect changes",
+          "server": "git",
+          "action": "get_changed_files"
+        },
+        {
+          "name": "Generate docs",
+          "server": "openai",
+          "action": "generate_documentation"
+        },
+        {
+          "name": "Update docs",
+          "server": "filesystem",
+          "action": "write_file"
+        }
+      ]
+    },
+    "bug_analysis": {
+      "description": "AI-powered bug detection and analysis",
+      "triggers": ["issue_created", "pull_request_opened"],
+      "steps": [
+        {
+          "name": "Read code",
+          "server": "filesystem",
+          "action": "read_files"
+        },
+        {
+          "name": "Analyze bugs",
+          "server": "openai",
+          "action": "detect_bugs"
+        },
+        {
+          "name": "Report findings",
+          "server": "github",
+          "action": "create_issue_comment"
+        }
+      ]
+    }
+  },
+  "context": {
+    "project": {
+      "name": "HeySalad Laura",
+      "type": "full-stack-web-app",
+      "stack": [
+        "Next.js 14",
+        "TypeScript",
+        "Supabase",
+        "TailwindCSS",
+        "Node-RED",
+        "OpenAI Realtime API",
+        "ElevenLabs TTS",
+        "Cloudflare Workers"
+      ],
+      "architecture": {
+        "frontend": "Next.js with App Router",
+        "backend": "Supabase (PostgreSQL + Edge Functions)",
+        "ai": "OpenAI Realtime + ElevenLabs",
+        "iot": "reCamera with Node-RED",
+        "proxy": "Cloudflare Workers for WebSocket"
+      }
+    },
+    "documentation": {
+      "main": "README.md",
+      "deployment": [
+        "ULTIMATE_DEPLOYMENT.md",
+        "READY_TO_DEPLOY.md",
+        "PRODUCTION_DEPLOYMENT_GUIDE.md"
+      ],
+      "integration": [
+        "INTEGRATION_STATUS.md",
+        "COMPLETE_SYSTEM_SUMMARY.md",
+        "SYSTEM_EVOLUTION.md"
+      ]
+    },
+    "components": {
+      "webApp": {
+        "path": "src",
+        "description": "Next.js web application for Laura management",
+        "features": [
+          "Restaurant dashboard",
+          "Camera management",
+          "Order tracking",
+          "Driver management",
+          "Admin portal"
+        ]
+      },
+      "reCamera": {
+        "path": "recamera-*.json",
+        "description": "Node-RED flows for AI camera integration",
+        "features": [
+          "AI object detection",
+          "OpenAI conversation",
+          "ElevenLabs TTS",
+          "Gimbal control",
+          "Laura API integration"
+        ]
+      },
+      "cloudflareWorker": {
+        "path": "cloudflare-worker",
+        "description": "WebSocket proxy for secure OpenAI connection",
+        "features": [
+          "Token validation",
+          "WebSocket proxying",
+          "Authentication"
+        ]
+      }
+    }
+  }
+}

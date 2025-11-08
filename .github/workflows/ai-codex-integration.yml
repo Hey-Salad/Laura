@@ -1,0 +1,199 @@
+name: OpenAI Codex Integration
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  ai-code-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          files: |
+            **/*.ts
+            **/*.tsx
+            **/*.js
+            **/*.jsx
+
+      - name: AI Code Review with OpenAI
+        if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install -g ai-code-review
+
+          # Review each changed file
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "Reviewing $file..."
+
+            # Get the diff for this file
+            git diff origin/${{ github.base_ref }}..HEAD -- "$file" > temp_diff.txt
+
+            # Send to OpenAI for review (using curl)
+            curl https://api.openai.com/v1/chat/completions \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -d "{
+                \"model\": \"gpt-4\",
+                \"messages\": [{
+                  \"role\": \"system\",
+                  \"content\": \"You are a code reviewer. Review the following code changes and provide constructive feedback on: 1) Potential bugs, 2) Code quality, 3) Security issues, 4) Performance concerns, 5) Best practices. Be concise and specific.\"
+                }, {
+                  \"role\": \"user\",
+                  \"content\": \"File: $file\n\n$(cat temp_diff.txt)\"
+                }],
+                \"temperature\": 0.3
+              }" > ai_review.json
+
+            # Extract and post review comment
+            review=$(jq -r '.choices[0].message.content' ai_review.json)
+
+            # Post as PR comment
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --body "## 🤖 AI Code Review for \`$file\`
+
+$review"
+          done
+
+  ai-documentation:
+    name: AI Documentation Generator
+    runs-on: ubuntu-latest
+    if: github.event.comment.body == '/generate-docs'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate AI Documentation
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find undocumented functions
+          echo "Analyzing code for documentation..."
+
+          # Use OpenAI to generate docs for TypeScript/JavaScript files
+          for file in $(find src -name "*.ts" -o -name "*.tsx" -o -name "*.js"); do
+            echo "Generating docs for $file..."
+
+            content=$(cat "$file")
+
+            curl https://api.openai.com/v1/chat/completions \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -d "{
+                \"model\": \"gpt-4\",
+                \"messages\": [{
+                  \"role\": \"system\",
+                  \"content\": \"You are a documentation generator. Generate JSDoc/TSDoc comments for all functions, classes, and important code blocks. Follow best practices for documentation.\"
+                }, {
+                  \"role\": \"user\",
+                  \"content\": \"$(echo "$content" | jq -Rs .)\"
+                }],
+                \"temperature\": 0.2
+              }" > ai_docs.json
+
+            # TODO: Parse and apply documentation suggestions
+          done
+
+  ai-bug-detection:
+    name: AI Bug Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: AI Bug Analysis
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Running AI-powered bug detection..."
+
+          # Analyze code for potential bugs
+          for file in $(git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -E '\.(ts|tsx|js|jsx)$'); do
+            if [ -f "$file" ]; then
+              content=$(cat "$file")
+
+              curl https://api.openai.com/v1/chat/completions \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d "{
+                  \"model\": \"gpt-4\",
+                  \"messages\": [{
+                    \"role\": \"system\",
+                    \"content\": \"You are a bug detection expert. Analyze the code and identify: 1) Null pointer risks, 2) Race conditions, 3) Memory leaks, 4) Logic errors, 5) Security vulnerabilities. List only critical issues.\"
+                  }, {
+                    \"role\": \"user\",
+                    \"content\": \"$(echo "$content" | jq -Rs .)\"
+                  }],
+                  \"temperature\": 0.1
+                }" > bug_analysis.json
+
+              issues=$(jq -r '.choices[0].message.content' bug_analysis.json)
+
+              if [ "$issues" != "No critical issues found" ]; then
+                echo "⚠️ Potential issues found in $file"
+                echo "$issues"
+              fi
+            fi
+          done
+
+  ai-performance-suggestions:
+    name: AI Performance Analysis
+    runs-on: ubuntu-latest
+    if: github.event.comment.body == '/analyze-performance'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: AI Performance Analysis
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Analyzing code for performance improvements..."
+
+          curl https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d "{
+              \"model\": \"gpt-4\",
+              \"messages\": [{
+                \"role\": \"system\",
+                \"content\": \"You are a performance optimization expert. Analyze the codebase and suggest: 1) Algorithm improvements, 2) Database query optimizations, 3) Caching strategies, 4) Async/await optimizations, 5) Bundle size reductions.\"
+              }, {
+                \"role\": \"user\",
+                \"content\": \"Please analyze this Next.js + Supabase application for performance improvements.\"
+              }],
+              \"temperature\": 0.3
+            }" > performance.json
+
+          suggestions=$(jq -r '.choices[0].message.content' performance.json)
+
+          # Post as issue comment
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "## 🚀 AI Performance Analysis
+
+$suggestions"

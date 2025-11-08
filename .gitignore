@@ -32,6 +32,15 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!ESP32_DEVICE.env
+
+# Sensitive environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.supabase
 
 # vercel
 .vercel
@@ -39,3 +48,42 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Cloudflare Worker
+cloudflare-worker/node_modules/
+cloudflare-worker/dist/
+cloudflare-worker/.wrangler/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets and credentials (be explicit)
+secrets/
+credentials/
+
+# reCamera/Node-RED backups
+*.flow.bak

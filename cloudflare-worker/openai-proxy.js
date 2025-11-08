@@ -32,6 +32,29 @@ export default {
       });
     }
 
+    // Debug endpoint for testing token validation
+    if (url.pathname === '/debug-validate') {
+      const token = url.searchParams.get('token');
+      if (!token) {
+        return new Response(JSON.stringify({ error: 'Missing token parameter' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      const isValid = await validateCameraToken(token, env);
+      return new Response(JSON.stringify({
+        token_length: token.length,
+        is_valid: isValid,
+        has_supabase_url: !!env.SUPABASE_URL,
+        has_anon_key: !!env.SUPABASE_ANON_KEY,
+        has_service_key: !!env.SUPABASE_SERVICE_ROLE_KEY,
+        has_openai_key: !!env.OPENAI_API_KEY,
+        env_keys: Object.keys(env),
+      }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     // WebSocket upgrade for /openai-realtime
     if (url.pathname === '/openai-realtime') {
       return handleOpenAIProxy(request, env);
@@ -119,27 +142,41 @@ async function handleOpenAIProxy(request, env) {
 
 async function validateCameraToken(token, env) {
   try {
+    console.log('[DEBUG] Validating camera token...');
+    console.log('[DEBUG] Token length:', token?.length);
+    console.log('[DEBUG] SUPABASE_URL exists:', !!env.SUPABASE_URL);
+    console.log('[DEBUG] SERVICE_ROLE_KEY exists:', !!env.SUPABASE_SERVICE_ROLE_KEY);
+
     // Query Supabase to validate token
-    const response = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/cameras?api_token=eq.${token}&select=id,status`,
-      {
-        headers: {
-          'apikey': env.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
-        },
-      }
-    );
+    // Use SERVICE_ROLE_KEY to bypass RLS policies
+    const url = `${env.SUPABASE_URL}/rest/v1/cameras?api_token=eq.${encodeURIComponent(token)}&select=id,status`;
+    console.log('[DEBUG] Query URL:', url);
+
+    const response = await fetch(url, {
+      headers: {
+        'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    });
+
+    console.log('[DEBUG] Response status:', response.status);
 
     if (!response.ok) {
+      const text = await response.text();
+      console.error(`[ERROR] Supabase query failed: ${response.status} ${response.statusText}`);
+      console.error(`[ERROR] Response body:`, text);
       return false;
     }
 
     const cameras = await response.json();
+    console.log('[DEBUG] Found cameras:', cameras.length);
 
     // Token is valid if we found exactly one camera with status 'online'
-    return cameras.length === 1 && cameras[0].status === 'online';
+    const isValid = cameras.length === 1 && cameras[0].status === 'online';
+    console.log('[DEBUG] Token valid:', isValid);
+    return isValid;
   } catch (error) {
-    console.error('Token validation error:', error);
+    console.error('[ERROR] Token validation error:', error);
     return false;
   }
 }
